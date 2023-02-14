@@ -1,11 +1,13 @@
 from rest_framework import generics
 from rest_framework.response import Response
-# from knox.models import AuthToken
 from tasks.serializer import (
-    RegisterSerializer, TaskSerializer, UpdateTaskSerializer)
+    RegisterSerializer, TaskSerializer, UpdateTaskSerializer
+    )
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from tasks.models import Task, CustomUser
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.exceptions import ValidationError
 
 
 # Register API
@@ -22,9 +24,8 @@ class TaskCreateView(generics.CreateAPIView):
         if self.request.user.role == 'Client':
             serializer.save(create_by=self.request.user)
         else:
-            return Response(
-                {'error': 'You are not authorized to create tasks.'},
-                status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError(
+                {'error': 'You are not authorized to create tasks.'})
 
 
 class TaskUpdateView(generics.UpdateAPIView):
@@ -43,13 +44,10 @@ class TaskUpdateView(generics.UpdateAPIView):
             if user:
                 serializer.save(assigned_to=user[0].id)
             else:
-                return Response(
-                    {'error': 'You are not authorized to assign tasks.'},
-                    status=status.HTTP_400_BAD_REQUEST)
+                raise ValidationError({"Error": "user is not valid"})
         else:
-            return Response(
-                {'error': 'You are not authorized to assign tasks.'},
-                status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError(
+                {'error': 'You are not authorized to assign tasks.'})
 
 
 class TaskDeleteView(generics.DestroyAPIView):
@@ -63,13 +61,12 @@ class TaskDeleteView(generics.DestroyAPIView):
     def perform_destroy(self, instance):
         if self.request.user.role == 'Manager':
             instance.delete()
-            return Response(
+            raise ValidationError(
                 {'message': 'Delete Sucessfully.'},
                 status=status.HTTP_204_NO_CONTENT)
         else:
-            return Response(
-                {'error': 'You are not authorized to delete tasks.'},
-                status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError(
+                {'error': 'You are not authorized to delete tasks.'})
 
 
 class TaskCompleteView(generics.UpdateAPIView):
@@ -86,6 +83,13 @@ class TaskCompleteView(generics.UpdateAPIView):
             if user:
                 serializer.save(status='Complete')
         else:
-            return Response(
-                {'error': 'You are not authorized to complete tasks.'},
-                status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError(
+                {'error': 'You are not authorized to complete tasks.'})
+
+
+# logout api
+class BlacklistRefreshView(generics.CreateAPIView):
+    def post(self, request):
+        token = RefreshToken(request.data.get('refresh'))
+        token.blacklist()
+        return Response("Success")

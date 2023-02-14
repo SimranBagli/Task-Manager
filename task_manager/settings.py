@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'tasks',
 ]
 
@@ -88,6 +90,17 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# DATABASES = {
+# 	'default': {
+# 		'ENGINE': 'django.db.backends.mysql',
+# 		'NAME': 'mydb',
+# 		'USER': 'root',
+# 		'PASSWORD': 'admin',
+# 		'HOST':'localhost',
+# 		'PORT':'3306',
+# 	}
+# }
 
 
 # Password validation
